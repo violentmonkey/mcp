@@ -15,7 +15,7 @@ The client must send `hello` as its first frame within 5 s of the socket opening
   "protocol": 1,
   "token": "<token>",
   "client": { "name": "Violentmonkey", "version": "2.31.0" },
-  "tools": ["scripts_list", "scripts_get", "scripts_create"]
+  "tools": ["scripts_list", "scripts_get", "scripts_write"]
 }
 ```
 
@@ -25,7 +25,7 @@ The client must send `hello` as its first frame within 5 s of the socket opening
   "type": "ready",
   "protocol": 1,
   "server": { "name": "@violentmonkey/mcp", "version": "0.1.0" },
-  "tools": ["scripts_list", "scripts_get", "scripts_create"] // accepted subset
+  "tools": ["scripts_list", "scripts_get", "scripts_write"] // accepted subset
 }
 ```
 
@@ -71,7 +71,7 @@ The server checks the `Origin` header on upgrade and only accepts `chrome-extens
 
 | Code | Meaning |
 | --- | --- |
-| 400 | Invalid params |
+| 400 | Invalid params, or code whose metadata block cannot be parsed |
 | 403 | Denied by the user or by extension settings |
 | 404 | Target not found |
 | 500 | Handler threw |

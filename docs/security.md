@@ -29,4 +29,4 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 - Display the server address and the list of requested tools on the authorization page.
 - Remember authorization only for the current server token; do not persist a token across browser restarts without the user's consent.
 - Provide a visible "connected" indicator and a one-click disconnect (close code `4002`).
-- Offer its own read-only setting that rejects `scripts_create`, `scripts_update`, `scripts_set_enabled` and `scripts_delete` with `403`, in addition to the server's `--readonly` flag.
+- Offer its own read-only setting that rejects `scripts_write`, `scripts_set_enabled` and `scripts_delete` with `403`, in addition to the server's `--readonly` flag.

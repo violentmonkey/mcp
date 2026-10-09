@@ -6,7 +6,7 @@ const HELP = `Usage: mcp [options]
   -p, --port <number>      Port for the extension (and HTTP transport). Default: 5678
       --host <host>        Bind address. Default: 127.0.0.1
       --token <string>     Fixed token instead of a generated one. Env: VM_MCP_TOKEN
-      --readonly           Only expose read-only tools (no create, update, enable or delete)
+      --readonly           Only expose read-only tools (no write, enable or delete)
       --transport <type>   MCP transport: "stdio" (default) or "http"
   -h, --help               Show this help
 `;

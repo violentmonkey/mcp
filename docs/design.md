@@ -76,7 +76,7 @@ agent ──tools/call──► server ──call{id,tool,params}──► exten
 4. The server validates the response against the output schema; a mismatch becomes error `502`.
 5. Errors are returned as MCP tool results with `isError: true` and text `[code] message`. Protocol-level MCP errors are used only for genuinely malformed MCP requests.
 
-Error codes: `503` not connected / disconnected during call, `504` timeout, `502` invalid response from extension, `404` script not found, `400` invalid params, `403` denied by user (read-only mode or declined confirmation), `500` handler failure.
+Error codes: `503` not connected / disconnected during call, `504` timeout, `502` invalid response from extension, `404` script not found, `400` invalid params (including a `scripts_write` whose metadata block cannot be parsed, with Violentmonkey's message), `403` denied by user (read-only mode or declined confirmation), `500` handler failure.
 
 ## Liveness
 

@@ -94,6 +94,19 @@ describe('violentmonkey mcp', () => {
     expect(res.structuredContent).toEqual({ scripts: [summary] });
   });
 
+  it('forwards scripts_write and returns whether the script was created', async () => {
+    const ext = extension();
+    ext.handle('scripts_write', ({ id }) => ({ script: { ...summary, id: id ?? 7 }, created: id === undefined }));
+    ext.connect();
+    await waitFor(() => ext.status === 'open');
+
+    const code = '// ==UserScript==\n// @name demo\n// ==/UserScript==';
+    const created = await mcp.callTool({ name: 'scripts_write', arguments: { code } });
+    expect(created.structuredContent).toMatchObject({ created: true, script: { id: 7 } });
+    const updated = await mcp.callTool({ name: 'scripts_write', arguments: { code, id: 1 } });
+    expect(updated.structuredContent).toMatchObject({ created: false, script: { id: 1 } });
+  });
+
   it('only lists tools supported by the extension while connected', async () => {
     const ext = extension();
     ext.handle('scripts_list', () => ({ scripts: [] }));
@@ -233,6 +246,7 @@ describe('read-only mode', () => {
     const ext = createClient({ port, token: TOKEN, info: { name: 'test', version: '1' } });
     ext.handle('scripts_list', () => ({ scripts: [] }));
     ext.handle('scripts_delete', ({ id }) => ({ id }));
+    ext.handle('scripts_write', () => ({ script: summary, created: false }));
     try {
       const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
       expect(names).toEqual(['scripts_get', 'scripts_list', 'vm_status']);

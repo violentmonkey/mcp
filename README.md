@@ -62,7 +62,7 @@ npx @violentmonkey/mcp [options]
   -p, --port <number>        Port for the extension (and HTTP transport). Default: 5678
       --host <host>          Bind address. Default: 127.0.0.1
       --token <string>       Use a fixed token instead of generating one. Env: VM_MCP_TOKEN
-      --readonly             Only expose read-only tools (no create, update, enable or delete)
+      --readonly             Only expose read-only tools (no write, enable or delete)
       --transport <type>     MCP transport: "stdio" (default) or "http"
 ```
 
@@ -86,8 +86,7 @@ Exposing the server beyond localhost (`--host 0.0.0.0`) is your responsibility; 
 | `vm_status` | Whether the extension is connected, its version, and the connect URL. Works even when disconnected. | read-only |
 | `scripts_list` | List scripts (id, name, namespace, version, enabled, matches). | read-only |
 | `scripts_get` | Get a script's metadata and source code by id. | read-only |
-| `scripts_create` | Install a new script from source code. | |
-| `scripts_update` | Replace a script's source code. | idempotent |
+| `scripts_write` | Create or update a script from source code. With `id` it updates that script; without `id` it matches by `@name` and `@namespace`, or creates a new one. Returns whether it was created. | idempotent |
 | `scripts_set_enabled` | Enable or disable a script. | idempotent |
 | `scripts_delete` | Remove a script. | destructive |
 

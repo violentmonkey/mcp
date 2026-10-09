@@ -52,22 +52,20 @@ export const tools = {
     output: z.object({ script: scriptDetail }),
     annotations: { readOnlyHint: true },
   }),
-  scripts_create: defineTool({
-    title: 'Create script',
+  scripts_write: defineTool({
+    title: 'Write script',
     description:
-      'Install a new userscript from source code. The code must include a ==UserScript== metadata block.',
+      'Create or update a userscript from source code. The code must include a ==UserScript== metadata block. ' +
+      'With `id`, that script is updated. Without `id`, a script with the same @name and @namespace is updated, otherwise a new script is created.',
     input: z.object({
       code: z.string().min(1),
-      enabled: z.boolean().optional().describe('Defaults to true'),
+      id: scriptId.optional(),
+      enabled: z.boolean().optional().describe('Defaults to the current state, or true for new scripts'),
     }),
-    output: z.object({ script: scriptSummary }),
-    annotations: {},
-  }),
-  scripts_update: defineTool({
-    title: 'Update script',
-    description: 'Replace the source code of an existing userscript.',
-    input: z.object({ id: scriptId, code: z.string().min(1) }),
-    output: z.object({ script: scriptSummary }),
+    output: z.object({
+      script: scriptSummary,
+      created: z.boolean().describe('Whether a new script was created'),
+    }),
     annotations: { idempotentHint: true },
   }),
   scripts_set_enabled: defineTool({
