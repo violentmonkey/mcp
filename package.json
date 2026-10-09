@@ -1,14 +1,13 @@
 {
-  "name": "@violentmonkey/mcp",
-  "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "violentmonkey-mcp-monorepo",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm -r build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
@@ -17,5 +16,10 @@
     }
   },
   "packageManager": "pnpm@12.10.1",
-  "type": "module"
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vitest": "^5.0.3"
+  }
 }
