@@ -12,6 +12,7 @@ export interface StartOptions {
   host?: string;
   token?: string;
   transport?: 'stdio' | 'http';
+  readonly?: boolean;
   allowNoOrigin?: boolean;
   callTimeoutMs?: number;
 }
@@ -39,6 +40,7 @@ export async function startServer(options: StartOptions): Promise<RunningServer>
   const session = new Session({
     token,
     server: { name: '@violentmonkey/mcp', version },
+    readonly: options.readonly,
     callTimeoutMs: options.callTimeoutMs,
   });
 

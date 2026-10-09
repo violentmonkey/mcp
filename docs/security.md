@@ -21,6 +21,7 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 - Bind address: `127.0.0.1`.
 - Token: random per start, unless `--token` / `VM_MCP_TOKEN` is set.
 - HTTP transport: off.
+- Read-only mode (`--readonly`): off. When on, write tools are not exposed to the agent, and the server refuses to accept them from the extension.
 - Single extension connection; a new connection must present the valid token to replace the existing one.
 
 ## Recommendations for the extension
@@ -28,4 +29,4 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 - Display the server address and the list of requested tools on the authorization page.
 - Remember authorization only for the current server token; do not persist a token across browser restarts without the user's consent.
 - Provide a visible "connected" indicator and a one-click disconnect (close code `4002`).
-- Offer a read-only mode that rejects `scripts_create`, `scripts_update`, `scripts_set_enabled` and `scripts_delete` with `403`.
+- Offer its own read-only setting that rejects `scripts_create`, `scripts_update`, `scripts_set_enabled` and `scripts_delete` with `403`, in addition to the server's `--readonly` flag.

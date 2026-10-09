@@ -213,3 +213,44 @@ describe('origin check', () => {
     }
   });
 });
+
+describe('read-only mode', () => {
+  it('hides write tools and never forwards them', async () => {
+    const port = await freePort();
+    const server = await startServer({
+      port,
+      token: TOKEN,
+      transport: 'http',
+      allowNoOrigin: true,
+      readonly: true,
+    });
+    const mcp = new Client({ name: 'agent', version: '1' });
+    await mcp.connect(
+      new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`), {
+        requestInit: { headers: { Authorization: `Bearer ${TOKEN}` } },
+      }),
+    );
+    const ext = createClient({ port, token: TOKEN, info: { name: 'test', version: '1' } });
+    ext.handle('scripts_list', () => ({ scripts: [] }));
+    ext.handle('scripts_delete', ({ id }) => ({ id }));
+    try {
+      const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
+      expect(names).toEqual(['scripts_get', 'scripts_list', 'vm_status']);
+
+      ext.connect();
+      await waitFor(() => ext.status === 'open');
+      const status = await mcp.callTool({ name: 'vm_status', arguments: {} });
+      expect(status.structuredContent).toMatchObject({
+        readonly: true,
+        tools: ['scripts_list'],
+      });
+      const res = await mcp.callTool({ name: 'scripts_delete', arguments: { id: 1 } });
+      expect(res.isError).toBe(true);
+      expect(JSON.stringify(res.content)).toContain('not found');
+    } finally {
+      ext.close();
+      await mcp.close();
+      await server.close();
+    }
+  });
+});

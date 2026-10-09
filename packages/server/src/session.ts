@@ -7,7 +7,7 @@ import {
   type ReadyMessage,
   type ToolName,
 } from '@violentmonkey/mcp-protocol';
-import { clientMessage, isToolName, tools } from '@violentmonkey/mcp-protocol/schemas';
+import { clientMessage, isReadOnlyTool, isToolName, tools } from '@violentmonkey/mcp-protocol/schemas';
 
 export interface Peer {
   send(data: string): void;
@@ -22,6 +22,7 @@ export interface PeerHandler {
 export interface SessionOptions {
   token: string;
   server: { name: string; version: string };
+  readonly?: boolean;
   callTimeoutMs?: number;
   helloTimeoutMs?: number;
   idleTimeoutMs?: number;
@@ -29,6 +30,7 @@ export interface SessionOptions {
 
 export interface SessionStatus {
   connected: boolean;
+  readonly: boolean;
   client?: { name: string; version: string };
   tools: ToolName[];
 }
@@ -65,6 +67,7 @@ export class Session {
     const { conn } = this;
     return {
       connected: !!conn,
+      readonly: !!this.options.readonly,
       client: conn?.client,
       tools: conn ? [...conn.tools] : [],
     };
@@ -129,7 +132,7 @@ export class Session {
             peer.close(CloseCode.UnsupportedVersion, 'unsupported protocol');
             return;
           }
-          const accepted = new Set(msg.tools.filter(isToolName));
+          const accepted = new Set(msg.tools.filter(isToolName).filter((name) => this.isAllowed(name)));
           conn = { peer, client: msg.client, tools: accepted };
           this.replace(conn);
           const ready: ReadyMessage = {
@@ -203,7 +206,14 @@ export class Session {
     this.conn?.peer.close(CloseCode.Closed, 'server closing');
   }
 
+  isAllowed(name: ToolName) {
+    return !this.options.readonly || isReadOnlyTool(name);
+  }
+
   async callTool(name: ToolName, params: unknown): Promise<unknown> {
+    if (!this.isAllowed(name)) {
+      throw new ToolCallError(ErrorCode.Denied, `${name} is disabled in read-only mode`);
+    }
     const { conn } = this;
     if (!conn) {
       throw new ToolCallError(ErrorCode.NotConnected, 'Violentmonkey is not connected');

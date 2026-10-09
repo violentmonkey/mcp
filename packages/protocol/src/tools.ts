@@ -93,6 +93,10 @@ export type ToolOutput<N extends ToolName> = z.infer<Tools[N]['output']>;
 
 export const toolNames = Object.keys(tools) as ToolName[];
 
+export function isReadOnlyTool(name: ToolName) {
+  return tools[name].annotations.readOnlyHint === true;
+}
+
 export function isToolName(name: string): name is ToolName {
   return Object.hasOwn(tools, name);
 }

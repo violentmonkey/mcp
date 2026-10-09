@@ -12,6 +12,7 @@ export interface McpOptions {
 
 const statusOutput = z.object({
   connected: z.boolean(),
+  readonly: z.boolean(),
   client: z.object({ name: z.string(), version: z.string() }).optional(),
   tools: z.array(z.string()),
   serverVersion: z.string(),
@@ -49,7 +50,7 @@ export function createMcpServer(session: Session, options: McpOptions) {
     },
   );
 
-  const registered = toolNames.map((name) => {
+  const registered = toolNames.filter((name) => session.isAllowed(name)).map((name) => {
     const def = tools[name];
     return {
       name,

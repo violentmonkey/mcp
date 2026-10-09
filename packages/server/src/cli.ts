@@ -6,6 +6,7 @@ const HELP = `Usage: mcp [options]
   -p, --port <number>      Port for the extension (and HTTP transport). Default: 5678
       --host <host>        Bind address. Default: 127.0.0.1
       --token <string>     Fixed token instead of a generated one. Env: VM_MCP_TOKEN
+      --readonly           Only expose read-only tools (no create, update, enable or delete)
       --transport <type>   MCP transport: "stdio" (default) or "http"
   -h, --help               Show this help
 `;
@@ -16,6 +17,7 @@ async function main() {
       port: { type: 'string', short: 'p', default: '5678' },
       host: { type: 'string', default: '127.0.0.1' },
       token: { type: 'string' },
+      readonly: { type: 'boolean', default: false },
       transport: { type: 'string', default: 'stdio' },
       help: { type: 'boolean', short: 'h' },
     },
@@ -45,10 +47,11 @@ async function main() {
     host,
     token: values.token ?? process.env.VM_MCP_TOKEN,
     transport: values.transport,
+    readonly: values.readonly,
   });
 
   process.stderr.write(
-    `Violentmonkey MCP listening on ${host}:${port} (${values.transport})\n` +
+    `Violentmonkey MCP listening on ${host}:${port} (${values.transport}${values.readonly ? ', read-only' : ''})\n` +
       `Open this URL in your browser to connect Violentmonkey:\n${running.connectUrl}\n`,
   );
 
