@@ -134,6 +134,15 @@ pnpm build
 pnpm test
 ```
 
+Releasing (versions are managed locally; all three packages share one version):
+
+```sh
+pnpm changeset            # describe the change (once per change)
+pnpm version-packages     # bump versions and update changelogs
+jj commit -m "chore: release vX.Y.Z"
+git tag vX.Y.Z && git push origin main vX.Y.Z   # pushing the tag publishes to npm via OIDC
+```
+
 Layout:
 
 ```
