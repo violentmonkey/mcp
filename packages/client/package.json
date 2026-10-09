@@ -34,7 +34,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json"
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@violentmonkey/mcp-protocol": "workspace:*"

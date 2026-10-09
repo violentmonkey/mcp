@@ -25,12 +25,11 @@ Releases are done manually. Versions are bumped with [changesets](https://github
 pnpm changeset            # describe the change
 pnpm changeset version    # bump versions and consume changesets
 jj commit -m "chore: release vX.Y.Z"
-pnpm build
 pnpm -r publish --access public --no-git-checks
 jj git push
 ```
 
-`pnpm -r publish` skips versions that are already on npm. Do not run `changeset publish` or `changeset tag`: they create per-package git tags.
+`pnpm -r publish` skips versions that are already on npm, and each package's `prepublishOnly` script rebuilds it first. Do not run `changeset publish` or `changeset tag`: they create per-package git tags.
 
 ## Layout
 
