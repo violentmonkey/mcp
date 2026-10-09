@@ -1,6 +1,6 @@
 {
   "name": "@violentmonkey/mcp-protocol",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Wire protocol constants, types and schemas for Violentmonkey MCP",
   "keywords": [
     "violentmonkey",
