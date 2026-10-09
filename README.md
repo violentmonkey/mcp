@@ -102,9 +102,9 @@ When the extension is not connected, every tool except `vm_status` returns an MC
 `@violentmonkey/mcp-client` is what Violentmonkey embeds to talk to the server.
 
 ```ts
-import { connect } from '@violentmonkey/mcp-client';
+import { createClient } from '@violentmonkey/mcp-client';
 
-const client = connect({
+const client = createClient({
   port: 5678,
   token,
   info: { name: 'Violentmonkey', version: '2.x' },
@@ -116,7 +116,9 @@ client.handle('scripts_list', async () => {
 
 client.handle('scripts_get', async ({ id }) => getScript(id));
 
-client.on('status', (status) => console.log(status)); // connecting | open | closed
+client.on('status', (status) => console.log(status)); // idle | connecting | open | closed
+
+client.connect(); // register all handlers first: they are sent in the handshake
 client.close();
 ```
 

@@ -1,0 +1,25 @@
+{
+  "name": "@violentmonkey/mcp-client",
+  "version": "0.0.0",
+  "description": "Lightweight client (no runtime validation) for connecting Violentmonkey to @violentmonkey/mcp",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@violentmonkey/mcp-protocol": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}
