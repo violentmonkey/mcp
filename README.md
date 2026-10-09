@@ -97,64 +97,15 @@ In `--readonly` mode only the read-only tools (`vm_status`, `scripts_list`, `scr
 
 When the extension is not connected, every tool except `vm_status` returns an MCP error result (`isError: true`) with code `503` and the message `Violentmonkey is not connected`. Over the HTTP transport this is a tool result, not an HTTP status, since the HTTP request itself succeeded.
 
-## Client library
+## Security
 
-`@violentmonkey/mcp-client` is what Violentmonkey embeds to talk to the server.
+The server binds to localhost, requires a token, and only accepts connections from the browser extension. Use `--readonly` if the agent should only be able to read your scripts. See [docs/security.md](docs/security.md) for the threat model.
 
-```ts
-import { createClient } from '@violentmonkey/mcp-client';
+## More
 
-const client = createClient({
-  port: 5678,
-  token,
-  info: { name: 'Violentmonkey', version: '2.x' },
-});
-
-client.handle('scripts_list', async () => {
-  return (await getScripts()).map(toSummary);
-});
-
-client.handle('scripts_get', async ({ id }) => getScript(id));
-
-client.on('status', (status) => console.log(status)); // idle | connecting | open | closed
-
-client.connect(); // register all handlers first: they are sent in the handshake
-client.close();
-```
-
-- `handle(name, fn)` is fully typed from the protocol package (types only, erased at build time). The client does no runtime validation: the server already validates params before forwarding and validates results before returning them, so handlers can trust their input. The client has no runtime dependencies beyond a few constants from `@violentmonkey/mcp-protocol` (about 1.4 KB gzipped).
-- Only tools known to the protocol can be handled. The set of handlers registered determines which tools the server exposes (see [docs/design.md](docs/design.md#capabilities)).
-- The client reconnects automatically with backoff while the token is still accepted, and sends heartbeats so a Manifest V3 service worker is kept alive.
-
-## Development
-
-```sh
-pnpm install
-pnpm build
-pnpm test
-```
-
-Releasing (versions are managed locally; all three packages share one version):
-
-```sh
-pnpm changeset            # describe the change (once per change)
-pnpm version-packages     # bump versions and update changelogs
-jj commit -m "chore: release vX.Y.Z"
-git tag vX.Y.Z && git push origin main vX.Y.Z   # pushing the tag publishes to npm via OIDC
-```
-
-Layout:
-
-```
-packages/
-  protocol/   tool schemas + wire types
-  server/     @violentmonkey/mcp  (CLI, Hono app, MCP server)
-  client/     @violentmonkey/mcp-client
-docs/
-  design.md   architecture and behavior
-  protocol.md WebSocket wire protocol
-  security.md threat model
-```
+- [docs/design.md](docs/design.md): how it works.
+- [docs/protocol.md](docs/protocol.md): the extension WebSocket protocol.
+- [DEVELOPMENT.md](DEVELOPMENT.md): packages, building, testing, releasing, and integrating the client library into the extension.
 
 ## License
 
