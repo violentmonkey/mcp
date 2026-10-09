@@ -1,0 +1,26 @@
+{
+  "name": "@violentmonkey/mcp-protocol",
+  "version": "0.0.0",
+  "description": "Wire protocol constants and types (root) and zod schemas (/schemas) for Violentmonkey MCP",
+  "license": "MIT",
+  "type": "module",
+  "files": ["dist"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "import": "./dist/schemas.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  }
+}
