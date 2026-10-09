@@ -1,28 +1,26 @@
 {
   "name": "@violentmonkey/mcp",
   "version": "0.0.0",
-  "description": "MCP server for Violentmonkey",
+  "description": "MCP server that lets AI agents manage Violentmonkey userscripts",
+  "keywords": [
+    "violentmonkey",
+    "userscript",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "homepage": "https://github.com/violentmonkey/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/violentmonkey/mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/violentmonkey/mcp.git",
+    "directory": "packages/server"
+  },
   "license": "MIT",
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "bin": {
     "mcp": "./dist/cli.js"
-  },
-  "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json"
-  },
-  "devDependencies": {
-    "@types/ws": "^8.18.2"
-  },
-  "dependencies": {
-    "@hono/node-server": "^2.1.4",
-    "@hono/node-ws": "^1.3.1",
-    "@modelcontextprotocol/sdk": "^1.32.1",
-    "@violentmonkey/mcp-protocol": "workspace:*",
-    "hono": "^4.13.13",
-    "zod": "^4.6.5"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,7 +30,27 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@hono/node-ws": "^1.3.1",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@violentmonkey/mcp-protocol": "workspace:*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
   }
 }

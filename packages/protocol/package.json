@@ -1,12 +1,24 @@
 {
   "name": "@violentmonkey/mcp-protocol",
   "version": "0.0.0",
-  "description": "Wire protocol constants and types (root) and zod schemas (/schemas) for Violentmonkey MCP",
+  "description": "Wire protocol constants, types and schemas for Violentmonkey MCP",
+  "keywords": [
+    "violentmonkey",
+    "userscript",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "homepage": "https://github.com/violentmonkey/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/violentmonkey/mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/violentmonkey/mcp.git",
+    "directory": "packages/protocol"
+  },
   "license": "MIT",
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -19,13 +31,19 @@
       "import": "./dist/schemas.js"
     }
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "zod": "^4.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

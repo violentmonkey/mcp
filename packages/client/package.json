@@ -1,12 +1,24 @@
 {
   "name": "@violentmonkey/mcp-client",
   "version": "0.0.0",
-  "description": "Lightweight client (no runtime validation) for connecting Violentmonkey to @violentmonkey/mcp",
+  "description": "Lightweight client for connecting Violentmonkey to @violentmonkey/mcp",
+  "keywords": [
+    "violentmonkey",
+    "userscript",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "homepage": "https://github.com/violentmonkey/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/violentmonkey/mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/violentmonkey/mcp.git",
+    "directory": "packages/client"
+  },
   "license": "MIT",
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,14 +27,16 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@violentmonkey/mcp-protocol": "workspace:*",
-    "zod": "^4.6.5"
-  },
-  "publishConfig": {
-    "access": "public"
+    "@violentmonkey/mcp-protocol": "workspace:*"
   }
 }
