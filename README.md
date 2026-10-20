@@ -15,6 +15,11 @@ Violentmonkey runs inside the browser and cannot listen on a port, so a small lo
 - The **extension** connects to the server over a WebSocket, authenticated with a one-time token.
 - The server owns the list of tools and their schemas. Agent tool calls are forwarded to the extension and the results are returned.
 
+## Prerequisites
+
+- Violentmonkey >= 2.49.5
+- Node.js >= 24
+
 ## Usage
 
 ### 1. Add the server to your agent
