@@ -17,7 +17,7 @@ Violentmonkey runs inside the browser and cannot listen on a port, so a small lo
 
 ## Prerequisites
 
-- Violentmonkey >= 2.49.5
+- Violentmonkey >= 2.49.5, which added MCP support. Per-tool minimums are listed under [Tools](#tools).
 - Node.js >= 24
 
 ## Usage
@@ -86,20 +86,29 @@ Exposing the server beyond localhost (`--host 0.0.0.0`) is your responsibility; 
 
 ## Tools
 
-| Tool | Description | Annotations |
-| --- | --- | --- |
-| `vm_status` | Whether the extension is connected, its version, and the connect URL. Works even when disconnected. | read-only |
-| `scripts_list` | List scripts (id, name, namespace, version, enabled, matches). | read-only |
-| `scripts_get` | Get a script's metadata and source code by id. | read-only |
-| `scripts_write` | Create or update a script from source code. With `id` it updates that script; without `id` it matches by `@name` and `@namespace`, or creates a new one. Returns whether it was created. | idempotent |
-| `scripts_set_enabled` | Enable or disable a script. | idempotent |
-| `scripts_delete` | Remove a script. | destructive |
+| Tool | Description | Annotations | Violentmonkey version |
+| --- | --- | --- | --- |
+| `vm_status` | Whether the extension is connected, its version, and the connect URL. Works even when disconnected. | read-only | — |
+| `scripts_list` | List scripts (id, name, namespace, version, enabled, matches). | read-only | >=2.49.5 |
+| `scripts_get` | Get a script's metadata and source code by id. | read-only | >=2.49.5 |
+| `scripts_write` | Create or update a script from source code. With `id` it updates that script; without `id` it matches by `@name` and `@namespace`, or creates a new one. Returns whether it was created. | idempotent | >=2.49.5 |
+| `scripts_set_enabled` | Enable or disable a script. | idempotent | >=2.49.5 |
+| `scripts_delete` | Remove a script. | destructive | >=2.49.5 |
+| `scripts_test_match` | Whether a script's source would be injected at a URL, answered by the extension's own matcher. | read-only | unreleased |
+| `tabs_list` | Tabs the user has granted to the agent. Empty until they grant one. | read-only | unreleased |
+| `tab_scripts` | What the extension attempted to run on a granted tab, including failures. | read-only | unreleased |
+| `tab_reload` | Reload a granted tab so scripts are re-injected. Returns the new `loadId`. | idempotent | unreleased |
+| `script_logs` | Read `GM_log` output for a granted tab, paged by a `seq` cursor. | read-only | unreleased |
+
+`—` means the tool is handled by the server and needs no Violentmonkey support. `unreleased` means no Violentmonkey version implements the tool yet: the extension reports which tools it implements when it connects, and the server exposes only those, so an unimplemented tool is never listed — it does not appear and then fail.
+
+The four tab tools (`tabs_list`, `tab_scripts`, `tab_reload`, `script_logs`) also need the user to grant a tab first. A grant is created explicitly in the Violentmonkey dashboard, lives in extension memory, and is revoked when its tab closes. Calling a tab tool on a tab that is not granted fails with `403`. `tab_reload` is a plain reload, not navigation. See [docs/contract.md](docs/contract.md) for the full contract.
 
 Exact input/output schemas live in [`packages/protocol`](packages/protocol) and are the single source of truth.
 
-In `--readonly` mode only the read-only tools (`vm_status`, `scripts_list`, `scripts_get`) are exposed.
+In `--readonly` mode only read-only tools are exposed, which excludes `scripts_write`, `scripts_set_enabled`, `scripts_delete` and `tab_reload`.
 
-When the extension is not connected, every tool except `vm_status` returns an MCP error result (`isError: true`) with code `503` and the message `Violentmonkey is not connected`. Over the HTTP transport this is a tool result, not an HTTP status, since the HTTP request itself succeeded.
+Only tools the connected extension reports in its handshake are exposed. Before the extension connects, `tools/list` contains `vm_status` alone; the list is refreshed when the connection changes. Calling a tool that is not exposed returns an error result. A call that races a disconnect still fails with code `503` and the message `Violentmonkey is not connected`. Over the HTTP transport this is a tool result, not an HTTP status, since the HTTP request itself succeeded.
 
 ## Security
 

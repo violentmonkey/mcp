@@ -14,6 +14,7 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 | Extension injecting prompt-injection payloads as tool descriptions | Tools and descriptions are defined by the server package. |
 | Script content returned to the agent contains prompt injection | Cannot be fully prevented. Tool results are plain data; agents should treat them as untrusted. |
 | Agent overwrites or deletes scripts unexpectedly | Destructive tools carry MCP annotations so clients can prompt. The extension should offer a read-only mode and optional confirmation for writes (error `403` when denied). |
+| The agent reads pages the user did not intend to expose | Tab tools work only on tabs the user granted explicitly. Grants live in extension memory and are revoked when the tab closes, so a recycled tab id cannot inherit one. Log capture is limited to `GM_log`, so ambient console output and page content are never forwarded. |
 | Remote access via the HTTP transport | `/mcp` requires `Authorization: Bearer <token>`. Default bind is loopback. Binding to non-loopback hosts prints a warning; TLS must be provided by the user (e.g. a reverse proxy). |
 
 ## Defaults
@@ -22,6 +23,7 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 - Token: random per start, unless `--token` / `VM_MCP_TOKEN` is set.
 - HTTP transport: off.
 - Read-only mode (`--readonly`): off. When on, write tools are not exposed to the agent, and the server refuses to accept them from the extension.
+- Tab grants: none. The agent cannot see or act on any tab until the user grants one.
 - Single extension connection; a new connection must present the valid token to replace the existing one.
 
 ## Recommendations for the extension
@@ -30,3 +32,5 @@ Allowing an agent to write userscripts is equivalent to letting it run JavaScrip
 - Remember authorization only for the current server token; do not persist a token across browser restarts without the user's consent.
 - Provide a visible "connected" indicator and a one-click disconnect (close code `4002`).
 - Offer its own read-only setting that rejects `scripts_write`, `scripts_set_enabled` and `scripts_delete` with `403`, in addition to the server's `--readonly` flag.
+- Hold tab grants in memory only, revoke them when the tab closes, and show which tabs are granted while connected.
+- Capture nothing but `GM_log`. Do not forward console output, page content or network activity to the server.

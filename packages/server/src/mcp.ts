@@ -80,9 +80,9 @@ export function createMcpServer(session: Session, options: McpOptions) {
   });
 
   const sync = () => {
-    const { connected, tools: accepted } = session.status;
+    const { tools: accepted } = session.status;
     for (const { name, tool } of registered) {
-      const enabled = !connected || accepted.includes(name);
+      const enabled = accepted.includes(name);
       if (enabled !== tool.enabled) {
         if (enabled) tool.enable();
         else tool.disable();

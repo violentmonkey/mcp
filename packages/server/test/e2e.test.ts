@@ -65,15 +65,16 @@ describe('violentmonkey mcp', () => {
     await server.close();
   });
 
-  it('reports disconnected status and returns 503 on tool calls', async () => {
+  it('reports disconnected status and exposes only vm_status', async () => {
     const status = await mcp.callTool({ name: 'vm_status', arguments: {} });
     expect(status.structuredContent).toMatchObject({ connected: false });
 
-    const res = await mcp.callTool({ name: 'scripts_list', arguments: {} });
-    expect(res.isError).toBe(true);
-    expect(res.content).toEqual([
-      { type: 'text', text: '[503] Violentmonkey is not connected' },
-    ]);
+    const names = (await mcp.listTools()).tools.map((t) => t.name);
+    expect(names).toEqual(['vm_status']);
+
+    await expect(mcp.callTool({ name: 'scripts_list', arguments: {} })).resolves.toMatchObject({
+      isError: true,
+    });
   });
 
   it('forwards tool calls to the extension', async () => {
@@ -114,6 +115,107 @@ describe('violentmonkey mcp', () => {
     await waitFor(() => ext.status === 'open');
     const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
     expect(names).toEqual(['scripts_list', 'vm_status']);
+  });
+
+  it('exposes the development tools when the extension supports them', async () => {
+    const ext = extension();
+    ext.handle('tabs_list', () => ({
+      tabs: [{ tabId: 5, url: 'https://example.com/', title: 'Example' }],
+    }));
+    ext.handle('tab_scripts', () => ({
+      url: 'https://example.com/',
+      loadId: 'load-1',
+      scripts: [
+        {
+          id: 3,
+          name: 'demo',
+          runAt: 'document-end',
+          frameId: 0,
+          status: 'injected' as const,
+          codeHash: 'abc',
+        },
+        {
+          id: 4,
+          name: 'broken',
+          runAt: 'document-start',
+          frameId: 0,
+          status: 'failed' as const,
+          error: 'SyntaxError: unexpected token',
+        },
+      ],
+    }));
+    ext.handle('tab_reload', () => ({
+      tabId: 5,
+      url: 'https://example.com/',
+      loadId: 'load-2',
+    }));
+    ext.handle('script_logs', ({ afterSeq }) => ({
+      entries: [
+        { seq: (afterSeq ?? 0) + 1, time: 1, scriptId: 3, text: 'hello' },
+        { seq: (afterSeq ?? 0) + 2, time: 2, scriptId: 3, text: 'hello', count: 4 },
+      ],
+      nextSeq: (afterSeq ?? 0) + 2,
+      dropped: 0,
+    }));
+    ext.handle('scripts_test_match', ({ url }) => ({
+      matched: url.startsWith('https://example.com/'),
+      rule: '@match https://example.com/*',
+      tried: ['@match https://example.com/*'],
+    }));
+    ext.connect();
+    await waitFor(() => ext.status === 'open');
+
+    const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
+    expect(names).toEqual([
+      'script_logs',
+      'scripts_test_match',
+      'tab_reload',
+      'tab_scripts',
+      'tabs_list',
+      'vm_status',
+    ]);
+
+    const tabs = await mcp.callTool({ name: 'tabs_list', arguments: {} });
+    expect(tabs.structuredContent).toEqual({
+      tabs: [{ tabId: 5, url: 'https://example.com/', title: 'Example' }],
+    });
+
+    const injected = await mcp.callTool({ name: 'tab_scripts', arguments: { tabId: 5 } });
+    expect(injected.structuredContent).toMatchObject({
+      loadId: 'load-1',
+      scripts: [
+        { id: 3, status: 'injected' },
+        { id: 4, status: 'failed', error: 'SyntaxError: unexpected token' },
+      ],
+    });
+
+    const reloaded = await mcp.callTool({ name: 'tab_reload', arguments: { tabId: 5 } });
+    expect(reloaded.structuredContent).toMatchObject({ loadId: 'load-2' });
+
+    const logs = await mcp.callTool({
+      name: 'script_logs',
+      arguments: { tabId: 5, sinceLoadId: 'load-2' },
+    });
+    expect(logs.structuredContent).toMatchObject({ nextSeq: 2, dropped: 0 });
+
+    const matched = await mcp.callTool({
+      name: 'scripts_test_match',
+      arguments: { code: '// ==UserScript==\n// @name demo\n// ==/UserScript==', url: 'https://example.com/' },
+    });
+    expect(matched.structuredContent).toMatchObject({ matched: true });
+  });
+
+  it('rejects script_logs limits above the cap', async () => {
+    const ext = extension();
+    ext.handle('script_logs', () => ({ entries: [], nextSeq: 0, dropped: 0 }));
+    ext.connect();
+    await waitFor(() => ext.status === 'open');
+    const res = await mcp.callTool({
+      name: 'script_logs',
+      arguments: { tabId: 1, limit: 1000 },
+    });
+    expect(res.isError).toBe(true);
+    expect(JSON.stringify(res.content)).toContain('500');
   });
 
   it('propagates handler errors and validates params', async () => {
@@ -249,7 +351,7 @@ describe('read-only mode', () => {
     ext.handle('scripts_write', () => ({ script: summary, created: false }));
     try {
       const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
-      expect(names).toEqual(['scripts_get', 'scripts_list', 'vm_status']);
+      expect(names).toEqual(['vm_status']);
 
       ext.connect();
       await waitFor(() => ext.status === 'open');
@@ -261,6 +363,37 @@ describe('read-only mode', () => {
       const res = await mcp.callTool({ name: 'scripts_delete', arguments: { id: 1 } });
       expect(res.isError).toBe(true);
       expect(JSON.stringify(res.content)).toContain('not found');
+    } finally {
+      ext.close();
+      await mcp.close();
+      await server.close();
+    }
+  });
+
+  it('hides tab_reload but keeps the read-only development tools', async () => {
+    const port = await freePort();
+    const server = await startServer({
+      port,
+      token: TOKEN,
+      transport: 'http',
+      allowNoOrigin: true,
+      readonly: true,
+    });
+    const mcp = new Client({ name: 'agent', version: '1' });
+    await mcp.connect(
+      new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`), {
+        requestInit: { headers: { Authorization: `Bearer ${TOKEN}` } },
+      }),
+    );
+    const ext = createClient({ port, token: TOKEN, info: { name: 'test', version: '1' } });
+    ext.handle('tabs_list', () => ({ tabs: [] }));
+    ext.handle('tab_scripts', () => ({ url: '', loadId: 'l', scripts: [] }));
+    ext.handle('tab_reload', () => ({ tabId: 1, url: '', loadId: 'l' }));
+    try {
+      ext.connect();
+      await waitFor(() => ext.status === 'open');
+      const names = (await mcp.listTools()).tools.map((t) => t.name).sort();
+      expect(names).toEqual(['tab_scripts', 'tabs_list', 'vm_status']);
     } finally {
       ext.close();
       await mcp.close();

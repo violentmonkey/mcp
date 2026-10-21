@@ -35,6 +35,7 @@ export async function startServer(options: StartOptions): Promise<RunningServer>
   const transport = options.transport ?? 'stdio';
   const token = options.token ?? randomBytes(32).toString('base64url');
   const version = readVersion();
+  // TODO: the connect URL moves to /mcp_connect/ in the next minor release.
   const connectUrl = `https://violentmonkey.github.io/mcp_connect.html?port=${options.port}&token=${token}`;
 
   const session = new Session({

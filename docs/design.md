@@ -3,9 +3,10 @@
 ## Goals
 
 - Let an agent create, read, edit, and delete Violentmonkey scripts.
+- Let an agent see what a script did in a tab — what ran, what failed, what it logged — so it can iterate instead of guessing.
 - Lightweight: one `npx` command, no persistent state, no config files.
 - The server defines what is allowed; the extension cannot add arbitrary tools.
-- The user explicitly authorizes every connection.
+- The user explicitly authorizes every connection, and every tab the agent may touch.
 
 ## Components
 
@@ -61,7 +62,12 @@ The server's tool registry is the allow list. In `hello`, the client sends the n
 - Unknown tool names from the client are ignored.
 - Old extension versions without e.g. `scripts_delete` simply do not get that tool.
 - `vm_status` is always exposed and handled by the server itself.
-- While disconnected, all tools stay listed (so agents are not confused by a vanishing tool list) but calls fail with 503. This is a deliberate choice: `list_changed` is applied only when the connected set of tools changes while connected.
+- Nothing else is listed until the extension reports it in `hello`. Before a connection, `tools/list` contains `vm_status` alone.
+- The exposed set is recomputed on every status change (connect, disconnect, replace), which is what `tools/list_changed` is for. On disconnect the set collapses back to `vm_status`, so the agent is never offered a tool that cannot work.
+
+An older extension that does not implement a tool omits it from `hello`, so the tool is never listed. Compatibility with older extensions needs no version checks.
+
+Tab tools additionally require a grant: see [contract.md](contract.md#grants). Grants are held by the extension, not the server, so a call to a non-granted tab is a normal tool error (`403`), not a capability change.
 
 ## Tool calls
 
@@ -92,4 +98,5 @@ Tool descriptions are injected into the agent's context. If the extension (or an
 
 - Multiple simultaneous extensions/browsers.
 - Persisting tokens or auto-reconnect across server restarts (a restarted stdio server gets a new token by design; use a fixed token with the HTTP transport if you need this).
-- Running scripts in tabs and reading console logs (planned as later tools: `script_logs`, `tab_eval`).
+- Capturing `console`, DOM state or network traffic. The agent sees only what a script emits through `GM_log`, so the extension never gains read access to pages the user did not grant. See [contract.md](contract.md#observation-boundary).
+- Evaluating code in a page (`tab_eval`) or querying its DOM. Userscripts are not driven from outside; agents that need to operate a page should use an extension built for that.
