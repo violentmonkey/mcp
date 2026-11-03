@@ -1,6 +1,6 @@
 {
   "name": "@violentmonkey/mcp-client",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Lightweight client for connecting Violentmonkey to @violentmonkey/mcp",
   "keywords": [
     "violentmonkey",
